@@ -1,12 +1,45 @@
 ---
 applications:
-- name: fortio
+- name: fortio-admin
+  instances: 1
+  routes:
+  - route: fortio.((apps_domain))
   memory: 128M
   disk_quota: 128M
-  buildpack: go_buildpack
+  buildpacks: [ go_buildpack ]
   path: src/fortio.org/fortio
-  command: fortio $FORTIO_COMMAND -static-dir $RESOURCES_DIR
+  command: fortio server -static-dir $RESOURCES_DIR -sync $SYNC_URL -data-dir $DATA_DIR
   env:
-    FORTIO_COMMAND: server
     GOPACKAGENAME: fortio.org/fortio
     RESOURCES_DIR: /home/vcap/app/ui
+    SYNC_URL: ((reports_bucket))
+    DATA_DIR: /home/vcap/tmp
+
+- name: fortio-report-ui
+  instances: 1
+  routes:
+  - route: fortio-reports.((apps_domain))
+  memory: 64M
+  disk_quota: 128M
+  buildpacks: [ go_buildpack ]
+  path: src/fortio.org/fortio
+  command: fortio report -static-dir $RESOURCES_DIR -sync $SYNC_URL -data-dir $DATA_DIR
+  env:
+    GOPACKAGENAME: fortio.org/fortio
+    RESOURCES_DIR: /home/vcap/app/ui
+    SYNC_URL: ((reports_bucket))
+    DATA_DIR: /home/vcap/tmp
+
+- name: fortio-echo-server
+  instances: ((echo_server_instances))
+  routes:
+  - route: fortio-echo-server.((apps_domain))
+  - route: fortio-echo-server.istio.((apps_domain))
+  - route: fortio-echo-server.apps.internal
+  memory: 128M
+  disk_quota: 128M
+  buildpacks: [ go_buildpack ]
+  path: src/fortio.org/fortio
+  command: fortio server -ui-path ""
+  env:
+    GOPACKAGENAME: fortio.org/fortio
