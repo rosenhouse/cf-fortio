@@ -1,0 +1,12 @@
+---
+applications:
+- name: fortio
+  memory: 128M
+  disk_quota: 128M
+  buildpack: go_buildpack
+  path: src/fortio.org/fortio
+  command: fortio $FORTIO_COMMAND -static-dir $RESOURCES_DIR
+  env:
+    FORTIO_COMMAND: server
+    GOPACKAGENAME: fortio.org/fortio
+    RESOURCES_DIR: /home/vcap/app/ui
